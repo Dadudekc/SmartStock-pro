@@ -1,4 +1,3 @@
-<?php
 if (!defined('ABSPATH')) exit; // Exit if accessed directly
 
 /**
@@ -61,7 +60,8 @@ class SSP_Alerts_Handler {
         global $wpdb;
         $table_name = $wpdb->prefix . 'ssp_alerts';
 
-        $alerts = $wpdb->get_results("SELECT * FROM $table_name WHERE active = 1", ARRAY_A);
+        $sql = $wpdb->prepare("SELECT * FROM $table_name WHERE active = %d", 1);
+        $alerts = $wpdb->get_results($sql, ARRAY_A);
 
         SSP_Logger::log('INFO', 'Retrieved active alerts from database.');
 
@@ -101,9 +101,7 @@ class SSP_Alerts_Handler {
 
         foreach ($alerts as $alert) {
             // Logic to process each alert
-            // For example, check stock prices and send notifications
             SSP_Logger::log('INFO', "Processing alert ID {$alert['id']} for stock {$alert['stock_symbol']}.");
         }
     }
 }
-?>

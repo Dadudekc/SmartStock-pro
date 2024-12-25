@@ -26,10 +26,10 @@ class SSP_Alerts_Handler {
             email varchar(100) NOT NULL,
             stock_symbol varchar(10) NOT NULL,
             alert_type varchar(20) NOT NULL,
-            condition_value varchar(50) NOT NULL,
+            condition_value float NOT NULL,
             active tinyint(1) DEFAULT 1 NOT NULL,
             created_at datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
-            PRIMARY KEY  (id)
+            PRIMARY KEY (id)
         ) $charset_collate;";
 
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
@@ -63,8 +63,12 @@ class SSP_Alerts_Handler {
         $sql = $wpdb->prepare("SELECT * FROM $table_name WHERE active = %d", 1);
         $alerts = $wpdb->get_results($sql, ARRAY_A);
 
-        SSP_Logger::log('INFO', 'Retrieved active alerts from database.');
+        if ($alerts === false) {
+            SSP_Logger::log('ERROR', 'Failed to retrieve active alerts from database.');
+            return [];
+        }
 
+        SSP_Logger::log('INFO', 'Retrieved active alerts from database.');
         return $alerts;
     }
 
@@ -77,6 +81,7 @@ class SSP_Alerts_Handler {
         global $wpdb;
         $table_name = $wpdb->prefix . 'ssp_alerts';
 
+        $alert_id = absint($alert_id); // Sanitize input
         $updated = $wpdb->update(
             $table_name,
             ['active' => 0],
@@ -85,10 +90,10 @@ class SSP_Alerts_Handler {
             ['%d']
         );
 
-        if ($updated !== false) {
-            SSP_Logger::log('INFO', "Alert ID $alert_id deactivated.");
-        } else {
+        if ($updated === false) {
             SSP_Logger::log('ERROR', "Failed to deactivate Alert ID $alert_id.");
+        } else {
+            SSP_Logger::log('INFO', "Alert ID $alert_id deactivated.");
         }
     }
 
@@ -100,8 +105,23 @@ class SSP_Alerts_Handler {
         $alerts = self::get_active_alerts();
 
         foreach ($alerts as $alert) {
-            // Logic to process each alert
-            SSP_Logger::log('INFO', "Processing alert ID {$alert['id']} for stock {$alert['stock_symbol']}.");
+            $alert_id = absint($alert['id']);
+            $stock_symbol = sanitize_text_field($alert['stock_symbol']);
+            $alert_type = sanitize_text_field($alert['alert_type']);
+            $condition_value = floatval($alert['condition_value']);
+
+            SSP_Logger::log('INFO', "Processing alert ID $alert_id for stock $stock_symbol.");
+
+            // Logic to check stock conditions or send notifications
+            // Example: Fetch stock data and compare with condition_value
+
+            // Assume alert is triggered
+            $alert_triggered = true; // Replace with actual condition-checking logic
+
+            if ($alert_triggered) {
+                SSP_Logger::log('INFO', "Alert ID $alert_id triggered for stock $stock_symbol.");
+                self::deactivate_alert($alert_id); // Deactivate alert
+            }
         }
     }
 }

@@ -3,7 +3,7 @@ if (!defined('ABSPATH')) exit; // Exit if accessed directly
 
 /**
  * Class SSP_API_Requests
- * Handles generic API requests with enhanced error handling, logging, and retry mechanisms.
+ * Handles API requests for external integrations with enhanced error handling, logging, and retry mechanisms.
  */
 class SSP_API_Requests {
     /**
@@ -55,7 +55,8 @@ class SSP_API_Requests {
         }
 
         // Log the API request
-        SSP_Logger::log('INFO', "Making API request to URL: $url with method: {$args['method']}");
+        SSP_Logger::log('INFO', "Making API request to: {$url} using method: {$args['method']}");
+
         $start_time = microtime(true);
 
         while ($attempt <= self::MAX_RETRIES) {
@@ -63,7 +64,7 @@ class SSP_API_Requests {
             $response = wp_remote_request($url, $args);
             $end_time = microtime(true);
             $response_time = round($end_time - $start_time, 4);
-            SSP_Logger::log('INFO', "API response time: {$response_time} seconds");
+            SSP_Logger::log('INFO', "API request completed in {$response_time} seconds.");
 
             // Check for WP_Error
             if (is_wp_error($response)) {
@@ -71,7 +72,7 @@ class SSP_API_Requests {
 
                 // Retry if attempts remain
                 if ($attempt < self::MAX_RETRIES) {
-                    SSP_Logger::log('INFO', "Retrying API request in {$delay} seconds...");
+                    SSP_Logger::log('INFO', "Retrying API request to {$url} in {$delay} seconds...");
                     sleep($delay);
                     $attempt++;
                     $delay *= 2; // Exponential backoff
@@ -92,7 +93,7 @@ class SSP_API_Requests {
 
                 // Retry for server errors (5xx)
                 if ($status_code >= 500 && $status_code < 600 && $attempt < self::MAX_RETRIES) {
-                    SSP_Logger::log('INFO', "Server error detected. Retrying API request in {$delay} seconds...");
+                    SSP_Logger::log('INFO', "Server error detected. Retrying API request to {$url} in {$delay} seconds...");
                     sleep($delay);
                     $attempt++;
                     $delay *= 2; // Exponential backoff
@@ -105,7 +106,7 @@ class SSP_API_Requests {
 
             // Retrieve response body
             $body = wp_remote_retrieve_body($response);
-            SSP_Logger::log('INFO', "API Response Body (truncated): " . substr($body, 0, 500));
+            SSP_Logger::log('DEBUG', "API Response Body: " . substr($body, 0, 500));
 
             // Decode JSON if required
             if ($decode) {
@@ -138,4 +139,3 @@ class SSP_API_Requests {
         return new WP_Error('api_request_failed', __('API request failed.', 'smartstock-pro'));
     }
 }
-?>

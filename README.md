@@ -1,55 +1,129 @@
-# SmartStock Pro
+# SmartStock Pro Plugin Documentation
 
-**SmartStock Pro** is a powerful and intuitive WordPress plugin designed for traders and investors who want to make smarter, data-driven decisions. Combining the latest AI technology with robust market analysis tools, SmartStock Pro provides:
+## Overview
+SmartStock Pro is a comprehensive WordPress plugin designed to provide advanced tools for stock research, AI-powered trade planning, customizable alerts, and enhanced analytics. Built for ease of use and extensibility, this plugin integrates with popular financial APIs to deliver real-time data and actionable insights.
 
-- **AI-Powered Stock Research**: Leverage advanced AI to analyze market sentiment and generate actionable insights.
-- **Customizable Trade Plans**: Create dynamic trade plans based on real-time stock data and sentiment analysis.
-- **Alerts and Notifications**: Set up personalized alerts for price, sentiment, and other market conditions.
-- **Historical Data Visualization**: Gain insights into past trends with detailed historical data charts.
-- **Real-Time Market Insights**: Access up-to-date stock information and breaking news directly from your WordPress dashboard.
+## Features
 
-## Key Features
+### 1. Stock Research and AI-Generated Trade Plans
+- Fetch stock quotes and historical data from Alpha Vantage and yFinance.
+- Use AI to generate detailed trade plans based on stock data and sentiment analysis.
 
-- **AI-Powered Insights**: Analyze market sentiment, generate trade plans, and improve decision-making with AI integration.
-- **Custom Alerts**: Stay informed with notifications tailored to your trading preferences.
-- **Seamless Integration**: Built to work smoothly with WordPress, providing an intuitive experience for users of all levels.
-- **Comprehensive Analytics**: Track your trading performance and market trends in one unified dashboard.
-- **Flexible Settings**: Customize risk tolerance, sentiment models, and more to suit your unique trading strategy.
+### 2. Customizable Alerts
+- Set price-based and sentiment-based alerts.
+- Real-time notifications via email.
+- Alert management through a user-friendly interface.
 
-## Why SmartStock Pro?
+### 3. Analytics and Sentiment Analysis
+- Integrated with OpenAI for advanced sentiment analysis.
+- Track API usage and alert performance through detailed analytics.
 
-SmartStock Pro empowers traders of all levels, from beginners to seasoned professionals, by offering:
+### 4. Shortcodes for Front-End Integration
+- Shortcodes for stock research forms and alert setup.
+- Dynamic, AJAX-powered forms for seamless user experience.
 
-- **Actionable Insights**: Get more than just raw data—receive insights you can act on.
-- **Enhanced Efficiency**: Save time with automated research and alerts.
-- **Community-Driven Features**: Developed with input from traders to address real-world needs.
-- **Scalability**: Adaptable for small accounts, large portfolios, or anywhere in between.
+### 5. Robust Lifecycle Management
+- Dedicated handlers for activation, deactivation, and uninstallation.
+- Automatic database table creation and cleanup.
+
+### 6. Performance Optimizations
+- Caching mechanisms for API responses.
+- Retry logic and exponential backoff for API requests.
+- Support for multiple API keys with fallback handling.
+
+## Directory Structure
+
+```plaintext
+includes/
+├── utils/
+│   ├── class-ssp-logger.php         # Logging utility.
+│   ├── class-ssp-error.php          # Error handling.
+│   ├── class-ssp-analytics.php      # Analytics tracking.
+│   ├── class-plugin-update-checker.php # GitHub update checker.
+│
+├── admin/
+│   ├── class-ssp-admin-notices.php  # Admin notices.
+│   ├── class-ssp-settings.php       # Plugin settings.
+│   ├── class-ssp-shortcodes.php     # Shortcode handling.
+│   ├── class-ssp-log-viewer.php     # Log file viewer.
+│
+├── api/
+│   ├── class-ssp-api-requests.php   # API request handler.
+│   ├── class-ssp-alpha-vantage.php  # Alpha Vantage integration.
+│   ├── class-ssp-finnhub.php        # Finnhub integration.
+│   ├── interface-ssp-openai-service.php  # OpenAI interface.
+│   ├── class-ssp-trade-plan-generator.php # Trade plan generator.
+│
+├── alerts/
+│   ├── class-ssp-alerts-handler.php # Alert creation and management.
+│   ├── class-ssp-alerts-cron.php    # Cron jobs for alerts.
+│
+├── ajax/
+│   ├── class-ssp-ajax-handlers.php  # AJAX request handlers.
+│
+├── cache/
+│   ├── class-ssp-cache-manager.php  # Caching utility.
+│
+├── lifecycle/
+│   ├── class-ssp-activation.php     # Activation handler.
+│   ├── class-ssp-deactivation.php   # Deactivation handler.
+│   ├── class-ssp-uninstall.php      # Uninstallation handler.
+```
 
 ## Installation
 
-1. **Download the Plugin**: [Get the latest release here](https://github.com/username/SmartStock-Pro).
-2. **Upload to WordPress**: Go to your WordPress Admin Dashboard → Plugins → Add New → Upload Plugin.
-3. **Activate the Plugin**: After uploading, activate SmartStock Pro in the WordPress plugin manager.
-4. **Configure Settings**: Navigate to **SmartStock Pro Settings** in the admin panel to customize your preferences.
+1. Clone or download the repository from GitHub:
+   ```bash
+   git clone https://github.com/dadudekc/smartstock-pro.git
+   ```
+2. Upload the plugin folder to the `wp-content/plugins` directory of your WordPress installation.
+3. Activate the plugin through the WordPress admin panel.
+4. Configure API keys and settings under the plugin's settings menu.
 
-## Getting Started
+## Usage
 
-1. Use the **[stock_research]** shortcode to add a stock research form to any page or post.
-2. Set up alerts via the **[alert_setup]** shortcode.
-3. Access detailed logs and insights through the SmartStock Pro admin panel.
-4. Explore additional features, including historical data, news analysis, and real-time updates.
+### Shortcodes
 
-## Support
+#### 1. Stock Research Form
+```plaintext
+[stock_research]
+```
+- Displays a form for fetching stock data and generating trade plans.
 
-Have questions or need help? Reach out via:
-- **Website**: [FreeRideInvestor](https://freerideinvestor.com/tools)
-- **GitHub Issues**: [Report a Bug](https://github.com/username/SmartStock-Pro/issues)
-- **Email**: support@freerideinvestor.com
+#### 2. Alert Setup Form
+```plaintext
+[alert_setup]
+```
+- Displays a form for setting up stock alerts.
 
-## Contributions
+### AJAX Endpoints
+- `ssp_fetch_stock_data`: Fetches stock data and generates a trade plan.
+- `ssp_set_alert`: Creates a new stock alert.
 
-Contributions are welcome! If you’d like to enhance SmartStock Pro, submit a pull request on [GitHub](https://github.com/username/SmartStock-Pro).
+## API Integrations
 
----
+### Alpha Vantage
+- Fetches real-time stock quotes and historical data.
+- Uses fallback API keys to handle rate limits.
 
-Does this improve clarity and presentation while highlighting the value of the plugin?
+### Finnhub
+- Retrieves news and sentiment data for stocks.
+
+### OpenAI
+- Generates trade plans and performs sentiment analysis.
+
+## Logging
+- All plugin activities are logged to `debug.log` located in the plugin's directory.
+- Logs can be viewed in the WordPress admin interface.
+
+## Development Notes
+
+- **Version:** 2.2.1
+- **Dependencies:** Ensure PHP 7.4+ and WordPress 5.8+ are installed.
+- **Extensibility:** Hooks and filters are provided for developers to extend functionality.
+- **Fallback Mechanisms:** yFinance is used when Alpha Vantage limits are exceeded.
+
+## License
+
+This plugin is open-source and available under the MIT license. Contributions are welcome.
+

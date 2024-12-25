@@ -5,15 +5,10 @@ if (!defined('ABSPATH')) exit; // Exit if accessed directly
  * Handles AJAX requests for stock data and alerts.
  */
 class SSP_AJAX_Handlers {
-    /**
-     * @var SSP_Trade_Plan_Generator Instance for generating trade plans.
-     */
     private $trade_plan_generator;
 
     /**
      * Constructor to initialize dependencies.
-     *
-     * @param SSP_Trade_Plan_Generator $trade_plan_generator
      */
     public function __construct(SSP_Trade_Plan_Generator $trade_plan_generator) {
         $this->trade_plan_generator = $trade_plan_generator;
@@ -36,7 +31,6 @@ class SSP_AJAX_Handlers {
     public function fetch_stock_data() {
         try {
             $symbol = $this->validate_and_sanitize_symbol();
-            SSP_Logger::log('INFO', "Processing stock symbol: $symbol");
 
             $stock_data = SSP_Alpha_Vantage::get_stock_quote($symbol);
             if (is_wp_error($stock_data)) {
@@ -48,14 +42,11 @@ class SSP_AJAX_Handlers {
                 throw new SSP_Error($trade_plan->get_error_message(), 2004);
             }
 
-            $response = [
+            wp_send_json_success([
                 'symbol' => $symbol,
                 'price' => $stock_data['price'] ?? __('N/A', 'smartstock-pro'),
-                'sentiment' => $stock_data['sentiment'] ?? __('N/A', 'smartstock-pro'),
                 'trade_plan' => $trade_plan,
-            ];
-
-            wp_send_json_success($response);
+            ]);
         } catch (SSP_Error $e) {
             SSP_Logger::log('ERROR', $e->getMessage());
             wp_send_json_error(['message' => $e->getMessage()]);
@@ -68,9 +59,7 @@ class SSP_AJAX_Handlers {
     public function set_alert() {
         try {
             $data = $this->validate_alert_request();
-            $this->insert_alert($data);
-
-            SSP_Logger::log('INFO', "Alert created for {$data['symbol']} with condition {$data['alert_type']} {$data['alert_value']}.");
+            SSP_Alerts_Handler::create_alert($data);
             wp_send_json_success(['message' => __('Alert created successfully!', 'smartstock-pro')]);
         } catch (SSP_Error $e) {
             SSP_Logger::log('ERROR', $e->getMessage());
@@ -80,9 +69,6 @@ class SSP_AJAX_Handlers {
 
     /**
      * Validate and sanitize the stock symbol from the request.
-     *
-     * @return string
-     * @throws SSP_Error
      */
     private function validate_and_sanitize_symbol(): string {
         $this->validate_nonce();
@@ -97,8 +83,6 @@ class SSP_AJAX_Handlers {
 
     /**
      * Validate the AJAX request nonce.
-     *
-     * @throws SSP_Error
      */
     private function validate_nonce(): void {
         if (!isset($_POST['security']) || !check_ajax_referer('ssp_nonce', 'security', false)) {
@@ -108,9 +92,6 @@ class SSP_AJAX_Handlers {
 
     /**
      * Validate and sanitize alert request data.
-     *
-     * @return array
-     * @throws SSP_Error
      */
     private function validate_alert_request(): array {
         $this->validate_nonce();
@@ -126,7 +107,7 @@ class SSP_AJAX_Handlers {
         if (empty($symbol)) {
             throw new SSP_Error(__('Stock symbol is required.', 'smartstock-pro'), 2006);
         }
-        if (!in_array($alert_type, ['price_above', 'price_below', 'sentiment_above', 'sentiment_below'], true)) {
+        if (!in_array($alert_type, ['price_above', 'price_below'], true)) {
             throw new SSP_Error(__('Invalid alert type.', 'smartstock-pro'), 2007);
         }
         if ($alert_value === null || !is_numeric($alert_value)) {
@@ -135,14 +116,17 @@ class SSP_AJAX_Handlers {
 
         return compact('email', 'symbol', 'alert_type', 'alert_value');
     }
+}
 
+/**
+ * Class SSP_Alerts_Handler
+ * Handles creation and management of alerts.
+ */
+class SSP_Alerts_Handler {
     /**
-     * Insert the alert into the database.
-     *
-     * @param array $data
-     * @throws SSP_Error
+     * Create a new alert in the database.
      */
-    private function insert_alert(array $data): void {
+    public static function create_alert(array $data): void {
         global $wpdb;
         $table = $wpdb->prefix . 'ssp_alerts';
 
